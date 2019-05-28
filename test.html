@@ -1,0 +1,751 @@
+<html>
+<head>
+	<title>test</title>
+	<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+	<style type="text/css">
+		.row
+		{
+			margin-top: 30px;
+		}
+		#responsetable
+		{
+			margin : 0 auto;
+			width: 100%;
+		}
+		#responsetable td
+		{
+			padding : 5px;
+		}
+		.hide
+		{
+			display: none !important; 
+		}
+		@media (min-width: 1200px)
+		{
+			.container {
+			    max-width: 1420px !important;
+			}
+		}
+		.line-wrapper-div div
+		{
+			margin: 0 auto;
+			width: 70%;
+		}
+	</style>
+
+</head>
+<body>
+
+
+<div class="container">
+	<div class="row">
+		
+		<div class="col-md-4 col-sm-4 col-xs-4 col-lg-4 text-center">
+			<select class="getyear">
+				<option value="Select">Select Year</option>
+			</select>
+		</div>
+
+		<div class="col-md-4 col-sm-4 col-xs-4 col-lg-4 text-center">
+			<select class="getstate"></select>
+		</div>
+
+		<div class="col-md-4 col-sm-4 col-xs-4 col-lg-4 text-center">
+			<select class="getcounty"></select>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 text-center">
+			<button class="getdata">Get data</button>
+		</div>
+	</div>	
+
+	<div class="row text-center">
+
+		<div class="col-md-4 col-lg-4 col-sm-12 col-xs-12">
+			<table class="table-striped" id="responsetable"></table>
+		</div>
+
+		<div class="col-md-4 col-sm-12 col-xs-12 col-lg-4 text-center baraqi">
+		</div>
+		
+		<div class="col-md-4 col-sm-12 col-xs-12 col-lg-4 text-center barpol">
+		</div>
+
+	</div>
+
+</div>
+
+
+
+<div class = "col-md-12 col-sm-12 col-xs-12 col-lg-12 text-center radio-wrapper-div hide">
+	<input type="radio" name="choice" checked= "checked" value="aqidays" > AQI Days
+	<input type="radio" name="choice" value="aqiv"> AQI Value
+	<input type="radio" name="choice" value="pol"> Pollutants
+
+</div>
+
+<div class="line-wrapper-div">
+	<div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 text-center lineaqidays"></div>
+	<div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 text-center linepol hide"></div>
+	<div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 text-center lineaqi hide"></div>
+</div>
+
+
+
+
+
+
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<script src = "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" type="text/javascript"></script>
+<script src = "https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js" type="text/javascript"></script>
+<script src = "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+	
+
+$(document).ready(function(){
+
+	 $.ajax({
+                url: 'http://localhost:3000/api/getYear',
+                type: 'get',
+			    crossDomain: true,
+                success: function(data){
+
+    				for(var i =0; i< data.length; i++)
+    				{
+    					var Year = data[i];
+
+    					$(".getYear").append("<option>"+Year+"</option>");
+
+    				}
+
+                },
+                error: function(){
+                    alert("failure");
+                }
+            });
+
+
+});
+
+
+$(".getdata").click(function(){
+
+		var year = $(".getyear").val();
+		if (year != 'Select')
+		{
+		var state = $(".getstate").val();
+		var county = $(".getcounty").val();
+
+		var params = {
+			'year' : year,
+			'state' : state,
+			'county' : county
+
+		};
+
+		var params_ovryears = {
+			'state' : state,
+			'county' : county
+
+		};
+
+		gettabledata(params);
+		getoveryears(params_ovryears);
+		$(".radio-wrapper-div").removeClass("hide");
+		}
+		else
+		{
+			alert("Please Select a Valid Year from the Dropdown");
+		}
+});
+
+
+$( ".getyear" ) .change(function () {    
+
+	
+
+	if ($(this).val() != "Select")
+	{
+
+		var params = {
+			'Year' : $(this).val()
+		};
+
+		var Year = $(this).val();
+		
+	 $.ajax({
+                url: 'http://localhost:3000/api/getState',
+                dataType: 'json',
+                type: 'post',
+			    crossDomain: true,
+                data: params,
+                success: function(data){
+                    console.log(data);
+                    $(".getstate").html("");
+                    $(".getstate").append("<option>Select State</option>");
+                    $(".getcounty").html("");
+                    $(".getcounty").append("<option>Select County</option>");
+                    for(var i =0; i< data.length; i++)
+    				{
+    					var State = data[i];
+
+    					$(".getstate").append("<option>"+State+"</option>");
+
+    				}
+
+                },
+                error: function(){
+                    alert("No State are for the Selected Year");
+                }
+            });
+	}
+
+
+});
+
+
+$( ".getstate" ) .change(function () {    
+	
+	var Year = $(".getyear").val();
+	var params = {
+		'Year' : Year,
+		'State' : $(this).val()
+	};
+
+$.ajax({
+        url: 'http://localhost:3000/api/getCounty',
+        dataType: 'json',
+        type: 'post',
+	    crossDomain: true,
+        data: params,
+        success: function(data){
+            console.log(data);
+            $(".getcounty").html("");
+            for(var i =0; i< data.length; i++)
+			{
+				var County = data[i]['County'];
+
+				$(".getcounty").append("<option>"+County+"</option>");
+
+			}
+
+        },
+        error: function(){
+            alert("No County are for the Selected State");
+        }
+    });
+
+
+});  
+
+
+function gettabledata(params)
+{
+
+	$.ajax({
+	                url: 'http://localhost:3000/api/get',
+	                dataType: 'json',
+	                type: 'post',
+				    crossDomain: true,
+	                data: params,
+	                success: function(data){
+	                    console.log(data);
+	                    getbarchartaqi(data);
+	                    getbarchartpol(data);
+	                    $("#responsetable").html("");
+	                    $.each(data, function (key, data) {
+						    
+	                    	$("#responsetable").append("<tr><td>"+key+"</td><td>"+data+"</td></tr>");
+
+						});
+
+	                },
+	                error: function(){
+	                    alert("Data not available for the Selected Year");
+	                }
+	            });
+}
+
+function getoveryears(params_ovryears)
+{
+
+	$.ajax({
+	                url: 'http://localhost:3000/api/getoveryears',
+	                dataType: 'json',
+	                type: 'post',
+				    crossDomain: true,
+	                data: params_ovryears,
+	                success: function(data){
+	                    console.log(data);
+	                    getlineaqi(data);
+	                    getlinepol(data);
+	                    getlineaqidays(data);
+	                },
+	                error: function(){
+	                    alert("Error while fetching data");
+	                }
+	            });
+}
+
+
+
+function getlineaqidays(data)
+{
+	$(".lineaqidays").html("");
+	$(".lineaqidays").append('<canvas id = "LineChartAQIdays" width="400" height="400"></canvas>');
+
+	var lineaqidays = document.getElementById("LineChartAQIdays").getContext('2d');
+	var g = [];
+	var m = [];
+	var us = [];
+	var u = [];
+	var vs = [];
+	var h = [];
+	var year = [];
+
+	for(var i =0; i< data.length; i++)
+	{
+		year.push(data[i]["Year"]);
+		g.push(data[i]["Good Days"]);
+		m.push(data[i]["Moderate Days"]);
+		us.push(data[i]["Unhealthy for Sensitive Groups Days"]);
+		u.push(data[i]["Unhealthy Days"]);
+		vs.push(data[i]["Very Unhealthy Days"]);
+		h.push(data[i]["Hazardous Days"]);
+
+	}
+
+
+		var data = {
+	    labels: year,
+	    datasets: [
+	      {
+	        label: "Good Days",
+	        data: g,
+	        backgroundColor: "blue",
+	        borderColor: "lightblue",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Moderate Days",
+	        data: m,
+	        backgroundColor: "green",
+	        borderColor: "lightgreen",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Unhealthy for Sensitive Groups Days",
+	        data: us,
+	        backgroundColor: "red",
+	        borderColor: "pink",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Unhealthy Days",
+	        data: u,
+	        backgroundColor: "orange",
+	        borderColor: "orange",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Very Unhealthy Days",
+	        data: vs,
+	        backgroundColor: "7765E3",
+	        borderColor: "B4ABEF",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Hazardous Days",
+	        data: h,
+	        backgroundColor: "#8B7E2A",
+	        borderColor: "FDE74C",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      }
+	    ]
+  	};
+
+	  	var options = {
+		    responsive: true,
+		    title: {
+		      display: true,
+		      position: "top",
+		      text: "Over the Years",
+		      fontSize: 18,
+		      fontColor: "#111"
+		    },
+		    legend: {
+		      display: true,
+		      position: "bottom",
+		      labels: {
+		        fontColor: "#333",
+		        fontSize: 16
+	      }
+	    }
+	};
+
+	var lchartaqidays = new Chart(lineaqidays, {
+
+		type: 'line',
+		data: data,
+		options: options
+
+	});
+
+}
+
+function getlinepol(data)
+{
+	$(".linepol").html("");
+	$(".linepol").append('<canvas id = "LineChartpol" width="400" height="400"></canvas>');
+
+	var linepol = document.getElementById("LineChartpol").getContext('2d');
+	var co = [];
+	var no2 = [];
+	var o3 = [];
+	var pm25 = [];
+	var pm10 = [];
+	var so2 = [];
+	var year = [];
+
+	for(var i =0; i< data.length; i++)
+	{
+		year.push(data[i]["Year"]);
+		co.push(data[i]["Days CO"]);
+		no2.push(data[i]["Days NO2"]);
+		o3.push(data[i]["Days Ozone"]);
+		pm25.push(data[i]["Days PM2.5"]);
+		pm10.push(data[i]["Days PM10"]);
+		so2.push(data[i]["Days SO2"]);
+
+	}
+	console.log(co);
+
+		var data = {
+	    labels: year,
+	    datasets: [
+	      {
+	        label: "Days CO",
+	        data: co,
+	        backgroundColor: "blue",
+	        borderColor: "lightblue",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Days NO2",
+	        data: no2,
+	        backgroundColor: "green",
+	        borderColor: "lightgreen",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Days Ozone",
+	        data: o3,
+	        backgroundColor: "red",
+	        borderColor: "pink",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Days PM2.5",
+	        data: pm25,
+	        backgroundColor: "orange",
+	        borderColor: "orange",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Days PM10",
+	        data: pm10,
+	        backgroundColor: "7765E3",
+	        borderColor: "B4ABEF",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Days SO2",
+	        data: so2,
+	        backgroundColor: "#8B7E2A",
+	        borderColor: "FDE74C",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      }
+	    ]
+  	};
+
+	  	var options = {
+		    responsive: true,
+		    title: {
+		      display: true,
+		      position: "top",
+		      text: "Over the Years",
+		      fontSize: 18,
+		      fontColor: "#111"
+		    },
+		    legend: {
+		      display: true,
+		      position: "bottom",
+		      labels: {
+		        fontColor: "#333",
+		        fontSize: 16
+	      }
+	    }
+	};
+
+	var lchartpol = new Chart(linepol, {
+
+		type: 'line',
+		data: data,
+		options: options
+
+	});
+
+}
+
+function getlineaqi(data)
+{
+	$(".lineaqi").html("");
+	$(".lineaqi").append('<canvas id = "LineChartAQI" width="400" height="400"></canvas>');
+
+	var lineaqi = document.getElementById("LineChartAQI").getContext('2d');
+	var maxaqi = [];
+	var percen = [];
+	var median = [];
+	var year = [];
+
+	for(var i =0; i< data.length; i++)
+	{
+		year.push(data[i]["Year"]);
+		maxaqi.push(data[i]['Max AQI']);
+		percen.push(data[i]['90th Percentile AQI']);
+		median.push(data[i]['Median AQI']);
+	}
+
+	var data = {
+	    labels: year,
+	    datasets: [
+	      {
+	        label: "Max AQI",
+	        data: maxaqi,
+	        backgroundColor: "blue",
+	        borderColor: "lightblue",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "90th Percentile AQI",
+	        data: percen,
+	        backgroundColor: "green",
+	        borderColor: "lightgreen",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      },
+	      {
+	        label: "Median AQI",
+	        data: median,
+	        backgroundColor: "red",
+	        borderColor: "pink",
+	        fill: false,
+	        lineTension: 0,
+	        radius: 5
+	      }
+	    ]
+  	};
+
+  	var options = {
+		    responsive: true,
+		    title: {
+		      display: true,
+		      position: "top",
+		      text: "Over the Years",
+		      fontSize: 18,
+		      fontColor: "#111"
+		    },
+		    legend: {
+		      display: true,
+		      position: "bottom",
+		      labels: {
+		        fontColor: "#333",
+		        fontSize: 16
+		      }
+		    }
+  };
+
+	console.log(maxaqi);
+	console.log(percen);
+	console.log(median);
+
+	var lchartaqi = new Chart(lineaqi, {
+
+		type: 'line',
+		data: data,
+		options: options
+
+	});
+
+}
+
+function getbarchartaqi(data_aqi)
+{
+
+	$(".baraqi").html("");
+	$(".baraqi").append('<canvas id = "BarChartAQIDays" width="400" height="400"></canvas>');
+
+	var baraqi = document.getElementById("BarChartAQIDays").getContext('2d');
+
+	var aqidays = [data_aqi['Good Days'], data_aqi['Moderate Days'], data_aqi['Unhealthy for Sensitive Groups Days'], data_aqi['Unhealthy Days'], data_aqi['Very Unhealthy Days'], data_aqi['Hazardous Days']]
+	var labels = ['Good Days', 'Moderate Days', 'Unhealthy for Sensitive Groups Days', 'Unhealthy Days', 'Very Unhealthy Days', 'Hazardous Days']
+	console.log(aqidays)
+	console.log(labels)
+
+
+	var myChartAQI = new Chart(baraqi, {
+
+		type: 'bar',
+		data: {
+			labels: labels,
+
+			datasets:[{ 
+			label: "Number of Days",
+			data: aqidays,
+			backgroundColor: [
+		                'rgba(255, 99, 132, 0.2)',
+		                'rgba(54, 162, 235, 0.2)',
+		                'rgba(255, 206, 86, 0.2)',
+		                'rgba(75, 192, 192, 0.2)',
+		                'rgba(153, 102, 255, 0.2)'],
+
+		     borderColor: [
+		        'rgba(255, 99, 132, 1)',
+		        'rgba(54, 162, 235, 1)',
+		        'rgba(255, 206, 86, 1)',
+		        'rgba(75, 192, 192, 1)',
+		        'rgba(153, 102, 255, 1)'
+		    	],
+	         borderWidth: 1
+		}]
+		},
+		options:{
+			legend:{
+			  display:false
+			},
+			scales: {
+			    yAxes: [{
+			      scaleLabel: {
+			        display: true,
+			        labelString: 'Number of Days'}}]
+					},     
+			},
+		});
+
+}
+
+
+function getbarchartpol(data_pol)
+{
+	$(".barpol").html("");
+	$(".barpol").append('<canvas id = "BarChartPolDays" width="400" height="400"> </canvas>');
+
+	var barpol = document.getElementById("BarChartPolDays").getContext('2d');
+	var poldays = [data_pol['Days CO'], data_pol['Days NO2'], data_pol['Days Ozone'], data_pol['Days PM2.5'], data_pol['Days PM10'], data_pol['Days SO2']]
+	var labels = ['Days CO', 'Days NO2', 'Days Ozone', 'Days PM2.5', 'Days PM10', 'Days SO2']	
+	
+	if (myChartPol != null) {
+	   myChartPol.destroy();
+	}
+
+	var myChartPol = new Chart(barpol, {
+
+
+		type: 'bar',
+		data: {
+			labels: labels,
+
+			datasets:[{ 
+			label: "Number of Days",
+			data: poldays,
+			backgroundColor: [
+		                'rgba(255, 99, 132, 0.2)',
+		                'rgba(54, 162, 235, 0.2)',
+		                'rgba(255, 206, 86, 0.2)',
+		                'rgba(75, 192, 192, 0.2)',
+		                'rgba(153, 102, 255, 0.2)'],
+
+		     borderColor: [
+		        'rgba(255, 99, 132, 1)',
+		        'rgba(54, 162, 235, 1)',
+		        'rgba(255, 206, 86, 1)',
+		        'rgba(75, 192, 192, 1)',
+		        'rgba(153, 102, 255, 1)'
+		    	],
+	         borderWidth: 1
+		}]
+		},
+		options:{
+			legend:{
+			  display:false
+			},
+			scales: {
+			    yAxes: [{
+			      scaleLabel: {
+			        display: true,
+			        labelString: 'Number of Days'}}]
+					},     
+			},
+
+
+
+	});
+
+}
+
+$('input[name=choice]').on('change', function() {
+	var value = $(this).val();
+	
+	if(value=="aqidays")
+	{
+		$(".lineaqidays").removeClass("hide");
+		$(".lineaqi").addClass("hide");
+		$(".linepol").addClass("hide");
+	}
+	if(value=="aqiv")
+	{
+		$(".lineaqidays").addClass("hide");
+		$(".lineaqi").removeClass("hide");
+		$(".linepol").addClass("hide");
+	}
+	if(value=="pol")
+	{
+		$(".lineaqidays").addClass("hide");
+		$(".lineaqi").addClass("hide");
+		$(".linepol").removeClass("hide");
+	}
+});
+</script>
+</body>
+</html>
