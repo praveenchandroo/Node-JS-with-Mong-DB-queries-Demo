@@ -19,7 +19,7 @@ var port = process.env.PORT || 3000;
 
 
 const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://pchand34:PrAnCh@7@cluster0-bmiju.mongodb.net/test?retryWrites=true";
+const uri = "mongodb+srv://pchand34:*******@cluster0-bmiju.mongodb.net/test?retryWrites=true";
 const client = new MongoClient(uri, { useNewUrlParser: true });
 var dbo;
 client.connect(function(err, db) {
